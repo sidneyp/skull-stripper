@@ -11,6 +11,9 @@ from PIL import Image
 from dataset import cvt1to3channels
 import time
 
+def normalize_image(image):
+    return 255*((image - np.min(image)) / (np.max(image) - np.min(image)))
+
 def main(args):
     # Prepare and instantiate the model
     model = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
@@ -23,6 +26,8 @@ def main(args):
     if 'N' in mat:
         input_mat = mat["N"]
 
+    if args.normalize:
+        input_mat = normalize_image(input_mat)
     input_mat = np.uint8(input_mat)
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -75,5 +80,9 @@ if __name__ == "__main__":
         "--result", type=str, default="./run_result", help="folder for output resulting images"
     )
 
+    parser.add_argument(
+        '--normalize', dest='normalize', action='store_true', help="normalize input"
+    )
+    parser.set_defaults(normalize=False)
     args = parser.parse_args()
     main(args)
